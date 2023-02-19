@@ -16,7 +16,7 @@ type format string
 const (
 	slackWebFookFormat format = "slack"
 	jsonFormat         format = "json"
-	plaintFormat       format = "plain"
+	plainFormat        format = "plain"
 	templateFormat     format = "template"
 )
 
@@ -31,7 +31,7 @@ func (f *format) UnmarshalMap(input any) error {
 	case "json":
 		*f = jsonFormat
 	default:
-		*f = plaintFormat
+		*f = plainFormat
 	}
 	return nil
 }
@@ -72,7 +72,7 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 		switch c.Format {
 		case slackWebFookFormat:
 			return output.NewSlack(output.SlackConf{Endpoint: c.WebHookEndpoint}, outdated)
-		case plaintFormat:
+		case plainFormat:
 			fallthrough
 		default:
 			return output.NewPlain(output.PlainConfig{}, outdated)

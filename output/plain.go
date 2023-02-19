@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/azuki-bar/packtrack/packagemanager"
+	"github.com/fatih/color"
 )
 
 type Plain struct {
@@ -13,7 +14,7 @@ type Plain struct {
 	config  PlainConfig
 }
 type PlainConfig struct {
-	isColor bool
+	IsColor bool
 }
 
 func NewPlain(config PlainConfig, appList []packagemanager.AppPackage) *Plain {
@@ -28,14 +29,21 @@ func (p *Plain) Exec(ctx context.Context, stdout, stderr io.Writer) error {
 		fmt.Fprintln(stdout, "not need to update!")
 		return nil
 	}
-	stdout.Write([]byte("Outdated Packages list\n"))
+	color.NoColor = !p.config.IsColor
+
+	fmt.Fprintln(stdout, "Outdated Packages list")
+	fmt.Fprintln(stdout, "======")
+
+	bold := color.New(color.Bold)
+	green := color.New(color.FgGreen)
+	red := color.New(color.FgHiRed)
 	for _, v := range p.appList {
-		_, err := stdout.Write([]byte(v.String() + "\n"))
-		if err != nil {
-			stderr.Write([]byte("something error occured in printing method\n"))
-			stderr.Write([]byte(err.Error()))
-			return err
-		}
+		bold.Fprint(stdout, v.Name)
+		fmt.Fprint(stdout, "\t")
+		red.Fprint(stdout, v.LocalVersion)
+		fmt.Fprint(stdout, " -> ")
+		green.Fprint(stdout, v.RemoteVersion)
+		fmt.Fprint(stdout, "\n")
 	}
 	return nil
 }
