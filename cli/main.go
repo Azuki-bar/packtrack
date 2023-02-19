@@ -7,6 +7,7 @@ import (
 
 	"github.com/azuki-bar/packtrack/output"
 	"github.com/azuki-bar/packtrack/packagemanager"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -47,6 +48,13 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$HOME/.packtrack/")
 	viper.AddConfigPath("$XDG_CONFIG_PATH/.packtrack/")
+	pflag.String("format", "default", "specify output format")
+	pflag.Bool("dryrun", false, "(NOT IMPL) dryrun")
+	pflag.String("manager", "brew", "specify package manager, from `brew, yay`")
+	pflag.Parse()
+	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
+		return err
+	}
 	c := config{}
 	if err := viper.Unmarshal(&c); err != nil {
 		return err
@@ -57,7 +65,7 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 	packageManager := packagemanager.New(c.Manager, nil)
 	outdated, err := packageManager.Outdated(ctx)
 	if err != nil {
-		stderr.Write([]byte(err.Error()))
+		fmt.Fprintln(stderr, err.Error())
 		return err
 	}
 	actor := func() output.Actor {

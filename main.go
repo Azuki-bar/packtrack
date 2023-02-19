@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	log.Panic(cli.Main(nil, os.Stdout, os.Stderr))
+	log.Panic(cli.Main(os.Stdin, os.Stdout, os.Stderr))
 }

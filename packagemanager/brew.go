@@ -24,7 +24,9 @@ func (bp brewPackage) RemoteVersion() string { return bp.Version }
 
 func (h homeBrew) Outdated(ctx context.Context) (*packages[brewPackage], error) {
 	// #nosec G204
-	cmd := exec.CommandContext(ctx, "brew", h.extraArgs...)
+	args := []string{"outdated", "--json=v2"}
+	args = append(args, h.extraArgs...)
+	cmd := exec.CommandContext(ctx, "brew", args...)
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("exec brew command failed,err=`%w`", err)
 	}
