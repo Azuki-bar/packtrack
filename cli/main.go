@@ -41,6 +41,7 @@ type config struct {
 	WebHookEndpoint string
 	Format          format
 	Manager         string
+	Color           bool
 }
 
 func Main(in io.Reader, stdout, stderr io.Writer) error {
@@ -51,6 +52,7 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 	pflag.String("format", "default", "specify output format")
 	pflag.Bool("dryrun", false, "(NOT IMPL) dryrun")
 	pflag.String("manager", "brew", "specify package manager, from `brew, yay`")
+	pflag.Bool("color", true, "output with color")
 	pflag.Parse()
 	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
 		return err
@@ -75,7 +77,7 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 		case plainFormat:
 			fallthrough
 		default:
-			return output.NewPlain(output.PlainConfig{}, outdated)
+			return output.NewPlain(output.PlainConfig{IsColor: c.Color}, outdated)
 		}
 	}()
 	return actor.Exec(ctx, stdout, stderr)

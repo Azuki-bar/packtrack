@@ -8,5 +8,8 @@ import (
 )
 
 func main() {
-	log.Panic(cli.Main(os.Stdin, os.Stdout, os.Stderr))
+	err := (cli.Main(os.Stdin, os.Stdout, os.Stderr))
+	if err != nil {
+		log.Print(err)
+	}
 }
