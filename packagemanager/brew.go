@@ -20,10 +20,9 @@ type homeBrew struct {
 }
 
 func (h homeBrew) Outdated(ctx context.Context) ([]AppPackage, error) {
-	// #nosec G204
 	args := []string{"outdated", "--json=v2"}
-	args = append(args, h.extraArgs...)
-	cmd := exec.CommandContext(ctx, "brew", args...)
+	// #nosec G204
+	cmd := exec.CommandContext(ctx, "brew", append(args, h.extraArgs...)...)
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("exec brew command failed,err=`%w`", err)
 	}

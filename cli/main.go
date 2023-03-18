@@ -40,8 +40,9 @@ type config struct {
 	Dryrun          bool
 	WebHookEndpoint string
 	Format          format
-	Manager         string
-	Color           bool
+	Manager         packagemanager.Name
+	// TODO: Colorは一部のアクターのみに使うコンフィグなのでトップレベルの設定にいるのはおかしいかも
+	Color bool
 }
 
 func Main(in io.Reader, stdout, stderr io.Writer) error {
@@ -51,7 +52,7 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 	viper.AddConfigPath("$XDG_CONFIG_PATH/.packtrack/")
 	pflag.String("format", "default", "specify output format")
 	pflag.Bool("dryrun", false, "(NOT IMPL) dryrun")
-	pflag.String("manager", "brew", "specify package manager, from `brew, yay`")
+	pflag.String("manager", "", "specify package manager, from `brew, yay`")
 	pflag.Bool("color", true, "output with color")
 	pflag.Parse()
 	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
@@ -74,6 +75,8 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 		switch c.Format {
 		case slackWebFookFormat:
 			return output.NewSlack(output.SlackConf{Endpoint: c.WebHookEndpoint}, outdated)
+		case jsonFormat:
+			return output.NewJSON(output.JSONConfig{}, outdated)
 		case plainFormat:
 			fallthrough
 		default:

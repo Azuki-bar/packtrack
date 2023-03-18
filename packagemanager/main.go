@@ -15,25 +15,40 @@ func (ap AppPackage) String() string {
 	return fmt.Sprintf(`"%s": %s -> %s`, ap.Name, ap.LocalVersion, ap.RemoteVersion)
 }
 
-type packageManagerName string
+type Name string
 
 const (
-	brew           packageManagerName = "brew"
-	yayPackageName packageManagerName = "yay"
+	brew           Name = "brew"
+	yayPackageName Name = "yay"
 )
 
+func (n *Name) UnmarshalMap(input any) error {
+	v, ok := input.(string)
+	if !ok {
+		return fmt.Errorf("no supported package manager")
+	}
+	switch v {
+	case "homebrew", "brew":
+		*n = brew
+	case "yay":
+		*n = yayPackageName
+	default:
+	}
+	return nil
+}
+
 type Manager struct {
-	name    packageManagerName
+	name    Name
 	manager interface {
 		Outdated(ctx context.Context) ([]AppPackage, error)
 	}
 }
 
-func New(packageManager string, extraArgs []string) Manager {
+func New(packageManager Name, extraArgs []string) Manager {
 	switch packageManager {
-	case "brew":
+	case brew:
 		return Manager{name: brew, manager: homeBrew{extraArgs: extraArgs}}
-	case "yay":
+	case yayPackageName:
 		return Manager{name: yayPackageName, manager: yay{}}
 	default:
 		return Manager{}
