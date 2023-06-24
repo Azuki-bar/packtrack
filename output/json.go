@@ -14,11 +14,16 @@ type JSON struct {
 	config  JSONConfig
 }
 type JSONConfig struct {
-	Indent string
+	configBase
+  Indent string `yaml:""`
 }
 
-func NewJSON(config JSONConfig, appList []packagemanager.AppPackage) *JSON {
-	return &JSON{appList: appList, config: config}
+func NewJSON(config Config, appList []packagemanager.AppPackage) (*JSON, error) {
+	c, ok := config.(*JSONConfig)
+	if !ok {
+		return nil, fmt.Errorf("config type error")
+	}
+	return &JSON{appList: appList, config: *c}, nil
 }
 
 func (j *JSON) Exec(ctx context.Context, stdout, stderr io.Writer) error {

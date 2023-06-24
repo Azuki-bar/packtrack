@@ -19,14 +19,16 @@ type Slack struct {
 }
 
 type SlackConf struct {
+	configBase
 	Endpoint string
 }
 
-func NewSlack(conf SlackConf, outdated []packagemanager.AppPackage) *Slack {
-	return &Slack{
-		conf:     conf,
-		outdated: outdated,
+func NewSlack(conf Config, outdated []packagemanager.AppPackage) (*Slack, error) {
+	c, ok := conf.(*SlackConf)
+	if !ok {
+		return nil, fmt.Errorf("type error")
 	}
+	return &Slack{conf: *c, outdated: outdated}, nil
 }
 func (s *Slack) Exec(ctx context.Context, stdout, stderr io.Writer) error {
 	body, err := s.toJSON()

@@ -14,14 +14,16 @@ type Plain struct {
 	config  PlainConfig
 }
 type PlainConfig struct {
+	configBase
 	IsColor bool
 }
 
-func NewPlain(config PlainConfig, appList []packagemanager.AppPackage) *Plain {
-	return &Plain{
-		appList: appList,
-		config:  config,
+func NewPlain(config Config, appList []packagemanager.AppPackage) (*Plain, error) {
+	c, ok := config.(*PlainConfig)
+	if !ok {
+		return nil, fmt.Errorf("type error")
 	}
+	return &Plain{appList: appList, config: *c}, nil
 }
 
 func (p *Plain) Exec(ctx context.Context, stdout, stderr io.Writer) error {

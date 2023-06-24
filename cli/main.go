@@ -11,40 +11,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type format string
-
-const (
-	slackWebFookFormat format = "slack"
-	jsonFormat         format = "json"
-	plainFormat        format = "plain"
-	templateFormat     format = "template"
-)
-
-func (f *format) UnmarshalMap(input any) error {
-	v, ok := input.(string)
-	if !ok {
-		return fmt.Errorf("no supported value type")
-	}
-	switch v {
-	case "slack":
-		*f = slackWebFookFormat
-	case "json":
-		*f = jsonFormat
-	default:
-		*f = plainFormat
-	}
-	return nil
-}
-
-type config struct {
-	Dryrun          bool
-	WebHookEndpoint string
-	Format          format
-	Manager         packagemanager.Name
-	// TODO: Colorは一部のアクターのみに使うコンフィグなのでトップレベルの設定にいるのはおかしいかも
-	Color bool
-}
-
 func Main(in io.Reader, stdout, stderr io.Writer) error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -54,11 +20,12 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 	pflag.Bool("dryrun", false, "(NOT IMPL) dryrun")
 	pflag.String("manager", "", "specify package manager, from `brew, yay`")
 	pflag.Bool("color", true, "output with color")
+	pflag.String("indent", "", "json")
 	pflag.Parse()
 	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
 		return err
 	}
-	c := config{}
+	c := Config{OutputOption: make(map[format]output.Config)}
 	if err := viper.Unmarshal(&c); err != nil {
 		return err
 	}
@@ -71,17 +38,20 @@ func Main(in io.Reader, stdout, stderr io.Writer) error {
 		fmt.Fprintln(stderr, err.Error())
 		return err
 	}
-	actor := func() output.Actor {
+	actor, err := func() (output.Actor, error) {
 		switch c.Format {
 		case slackWebFookFormat:
-			return output.NewSlack(output.SlackConf{Endpoint: c.WebHookEndpoint}, outdated)
+			return output.NewSlack(c.OutputOption[slackWebFookFormat], outdated)
 		case jsonFormat:
-			return output.NewJSON(output.JSONConfig{}, outdated)
+			return output.NewJSON(c.OutputOption[jsonFormat], outdated)
 		case plainFormat:
 			fallthrough
 		default:
-			return output.NewPlain(output.PlainConfig{IsColor: c.Color}, outdated)
+			return output.NewPlain(c.OutputOption[plainFormat], outdated)
 		}
 	}()
+	if err != nil {
+		return fmt.Errorf("parse format failed, err=%w", err)
+	}
 	return actor.Exec(ctx, stdout, stderr)
 }
